@@ -17,11 +17,13 @@ int menu_select()
 		printf("\t\t   │                                │\n");
 		printf("\t\t   │     4. 逆 拓 扑 排 序          │\n");
 		printf("\t\t   │                                │\n");
+		printf("\t\t   │     5. 关  键  活  动          │\n");
+		printf("\t\t   │                                │\n");
 		printf("\t\t   │     0.退出                     │\n");
 		printf("\t\t   └————————————————┘\n");
-		printf("\t\t请选择(0-4):");
+		printf("\t\t请选择(0-5):");
 		scanf("%d", &i);
-	} while (i < 0 || i>4);
+	} while (i < 0 || i>5);
 	return i;
 }
 

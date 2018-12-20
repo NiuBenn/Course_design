@@ -9,6 +9,8 @@ typedef struct ArcNode
 {
 	int _Adjvex;	//储存边所指的顶点位置
 	int _Weight;	//储存该边的权重
+	int _Ee;	//活动最早发生时间
+	int _El;	//活动最晚发生时间
 	struct ArcNode *_NextArc;		//指向下一条边的指针
 }ArcNode;
 
@@ -18,8 +20,8 @@ typedef struct VexNode
 	DataType _data;		//顶点信息
 	int _InDegree;		//入度
 	int _Flag;			//拓扑排序是用来判断是否排过
-	int _Ve;			//最早发生时间
-	int _Vl;			//最晚发生时间
+	int _Ve;			//事件最早发生时间
+	int _Vl;			//事件最晚发生时间
 	ArcNode *_FirstArc;		//指向第一条依附该顶点的弧
 }VexNode;
 
@@ -53,7 +55,6 @@ int IfHaveThisVex(ALGraph* graph, DataType data)
 
 void CreatAdjList(ALGraph* graph)
 {
-	int ArcNum = 0;		//定义ArcNum存放边的个数，作为次函数最后返回值
 	int Weight;
 	int FirstIndex, SecondIndex;	//定义两个index存放边的两个顶点在数组中的下标
 	DataType FirstVex, SecondVex;	//定义一个边的两个顶点值，用于接收用户输入的边的两个顶点信息
@@ -75,7 +76,7 @@ void CreatAdjList(ALGraph* graph)
 	for (int i = 0; i < graph->_ArcNum; ++i)
 	{
 		ClearStdin();		//清空输入缓冲区
-		printf("请输入有向图中边的两个顶点以及权重(例:A->B 则输入A B)：");
+		printf("请输入有向图中第%d边的两个顶点以及权重(例:A->B权重5 则输入A B 5)：", i + 1);
 		scanf("%c %c %d", &FirstVex, &SecondVex, &Weight);
 		FirstIndex = IfHaveThisVex(graph, FirstVex);
 		SecondIndex = IfHaveThisVex(graph, SecondVex);
@@ -138,12 +139,18 @@ void PrintfAdjList(ALGraph* graph)
 void TopologicalSorting(ALGraph* graph,int *arr)
 {
 	system("cls");
+	if (arr[MAX - 1] == 1)
+	{
+		printf("该图已经进行过拓扑排序！\n");
+		system("pause");
+		return;
+	}
 	int count = 0;
 	int flag = 1;
 	while (flag)
 	{
 		flag = 0;
-		for (int i = 0; i < graph->_ArcNum; ++i)
+		for (int i = 0; i < graph->_VexNum; ++i)
 		{
 			if (graph->_AdjList[i]._InDegree == 0 && graph->_AdjList[i]._Flag == 0)
 			{
@@ -171,7 +178,7 @@ void TopologicalSorting(ALGraph* graph,int *arr)
 	
 	for (int i = 0; i < count; ++i)
 	{
-		printf("[%c][Ve: %d]--", graph->_AdjList[arr[i]]._data, graph->_AdjList[arr[i]]._Ve);
+		printf("[%c][Ve: %d]\n", graph->_AdjList[arr[i]]._data, graph->_AdjList[arr[i]]._Ve);
 	}
 
 	printf("[NULL]\n");
@@ -182,6 +189,7 @@ void TopologicalSorting(ALGraph* graph,int *arr)
 	}
 	else
 	{
+		arr[MAX - 1] = 1;
 		printf("事件输出数量等于总数量，图中不带环！！\n");
 	}
 	system("pause");
@@ -190,6 +198,12 @@ void TopologicalSorting(ALGraph* graph,int *arr)
 void RTopologicalSorting(ALGraph* graph, int *arr)
 {
 	system("cls");
+	if (arr[MAX - 1] == 0)
+	{
+		printf("请确保次图不带环并且已进行过拓扑排序后再试！\n");
+		system("pause");
+		return;
+	}
 	graph->_AdjList[arr[graph->_VexNum - 1]]._Vl = graph->_AdjList[arr[graph->_VexNum - 1]]._Ve;
 	for (int i = graph->_VexNum - 2; i >= 0; --i)
 	{
@@ -206,9 +220,58 @@ void RTopologicalSorting(ALGraph* graph, int *arr)
 
 	for (int i = graph->_VexNum - 1; i >= 0; --i)
 	{
-		printf("[%c][Ve: %d]--", graph->_AdjList[arr[i]]._data, graph->_AdjList[arr[i]]._Vl);
+		printf("[%c][Ve: %d]\n", graph->_AdjList[arr[i]]._data, graph->_AdjList[arr[i]]._Vl);
 	}
-	printf("[NULL]");
+	arr[MAX - 2] = 1;
+	//printf("[NULL]");
 	system("pause");
 }
+
+void KeyActivites(ALGraph* graph, int *arr)
+{
+	system("cls");
+	if (arr[MAX - 2] == 0 || arr[MAX - 1] == 0)
+	{
+		printf("请确保该图进行过拓扑排序及逆拓扑排序后再试\n");
+		system("pause");
+		return;
+	}
+
+	for (int i = 0; i < graph->_VexNum; ++i)
+	{
+		ArcNode* cur = graph->_AdjList[arr[i]]._FirstArc;
+		while (cur)
+		{
+			cur->_Ee = graph->_AdjList[arr[i]]._Ve;
+			cur->_El = graph->_AdjList[cur->_Adjvex]._Vl;
+			
+			printf("活动[%c]-->[%c]的最早发生时间：%d  最晚发生时间：%d\n",
+				graph->_AdjList[arr[i]]._data, graph->_AdjList[cur->_Adjvex]._data, cur->_Ee, cur->_El);
+
+			cur = cur->_NextArc;
+		}
+	}
+
+	printf("-------------------------------------------\n");
+	printf("关键路径如下：\n");
+
+	for (int i = 0; i < graph->_VexNum; ++i)
+	{
+		ArcNode* cur = graph->_AdjList[arr[i]]._FirstArc;
+		while (cur)
+		{
+			//顶点的最早发生时间和最晚发生时间相等即在关键路径上
+			if (graph->_AdjList[arr[i]]._Ve == graph->_AdjList[arr[i]]._Vl
+				&&graph->_AdjList[cur->_Adjvex]._Ve == graph->_AdjList[cur->_Adjvex]._Vl)
+			{
+				printf("活动[%c]-->[%c] 长度：%d\n",
+					graph->_AdjList[arr[i]]._data, graph->_AdjList[cur->_Adjvex]._data, cur->_Weight);
+			}
+			cur = cur->_NextArc;
+		}
+	}
+
+	system("pause");
+}
+
 

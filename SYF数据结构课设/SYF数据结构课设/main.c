@@ -4,7 +4,9 @@
 int main()
 {
 	ALGraph G;
-	int arr[MAX];
+	int arr[MAX];		//存放拓扑排序顺序
+	arr[MAX - 1] = 0;	//标志位来判断是否进行过拓扑排序
+	arr[MAX - 2] = 0;	//标志位来判断是否进行过逆拓扑排序
 	while (1)
 	{
 		switch (menu_select())
@@ -21,8 +23,11 @@ int main()
 		case 4:
 			RTopologicalSorting(&G, arr);
 			break;
+		case 5:
+			KeyActivites(&G, arr);
+			break;
 		case 0:
-			printf("\t\tsystem exit");
+			printf("\t\t系统退出！！\n");
 			system("pause");
 			exit(0);
 		}
